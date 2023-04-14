@@ -5,7 +5,7 @@ import path from "path";
 export default {
   plugins: [vue()],
   server: {
-    port: 8080,
+    port: 5250,
   },
   resolve: {
     alias: {
