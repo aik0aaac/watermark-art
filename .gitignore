@@ -1,6 +1,8 @@
 .DS_Store
 node_modules
-/dist
+
+# Github Pagesへコンテンツを載せるために無効化
+# /dist
 
 /tests/e2e/videos/
 /tests/e2e/screenshots/
