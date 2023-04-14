@@ -39,12 +39,52 @@ onMounted(() => {
     });
 });
 
-// 自分の画像を使える様に
+// ローカルの画像を使える様に
 const uploadImage = (e: Event) => {
   const files = (e.target as HTMLInputElement).files;
   if (!files) return;
 
   state.image = URL.createObjectURL(files[0]);
+};
+
+// スクショを簡単に撮れる様に
+const snapshotCanvasIdName = "snapshotCanvas";
+const imgIdName = "imgIdName";
+const generateSnapshot = () => {
+  const canvas = document.getElementById(
+    snapshotCanvasIdName
+  ) as HTMLCanvasElement;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return;
+
+  const video = document.getElementById(videoIdName) as HTMLVideoElement;
+  const imageEle = document.getElementById(imgIdName) as HTMLImageElement;
+  const videoWidth = video.offsetWidth;
+  const videoHeight = video.offsetLeft;
+  canvas.setAttribute("width", videoWidth.toString());
+  canvas.setAttribute("height", videoHeight.toString());
+  ctx.drawImage(video, 0, 0, videoWidth, videoHeight);
+  ctx.drawImage(
+    imageEle,
+    0,
+    (videoHeight / 2) * -1,
+    imageEle.offsetWidth,
+    imageEle.offsetHeight
+  );
+  canvas.toBlob((blob) => {
+    if (!blob) return;
+    // 画像を生成
+    const snapshotImageUrl = window.URL.createObjectURL(blob);
+    const mimeTypeArray = blob.type.split("/");
+    const extension = mimeTypeArray[1];
+    // 画像をローカルに保存させる
+    const saveAnchor = document.createElement("a");
+    saveAnchor.href = snapshotImageUrl;
+    saveAnchor.download = `fileName.${extension}`;
+    document.body.appendChild(saveAnchor);
+    saveAnchor.click();
+    document.body.removeChild(saveAnchor);
+  });
 };
 </script>
 
@@ -53,7 +93,7 @@ const uploadImage = (e: Event) => {
   <section class="error">{{ error }}</section>
 
   <!-- 透かし絵表示エリア -->
-  <section class="wrapper">
+  <section class="watermark-art-wrapper">
     <video
       :id="videoIdName"
       class="capture-video"
@@ -61,7 +101,7 @@ const uploadImage = (e: Event) => {
       muted
       playsinline
     ></video>
-    <img class="cover-watermark-art" :src="image" />
+    <img :id="imgIdName" class="cover-watermark-art" :src="image" />
   </section>
 
   <!-- 透かし絵選択 -->
@@ -77,15 +117,24 @@ const uploadImage = (e: Event) => {
     </select>
   </section>
 
+  <!-- キャプチャ -->
+  <section class="capture-control">
+    <button type="button" @click="generateSnapshot">
+      <font-awesome-icon icon="fa-solid fa-camera" />キャプチャ
+    </button>
+  </section>
+
   <!-- 自分の画像を使う -->
   <section class="upload-image">
     <p class="desc">
-      自分のお手持ちの画像を透かし絵にできます。<br />
+      お手持ちの画像を透かし絵にできます。<br />
       PNG形式の画像のみ対応しております。<br />
-      画像サイズはスマホの場合、幅360px/高さ500px推奨です。<br />
-      ※アップロードされた画像はサーバー等へのアップロードはされません。お好きな画像をお試しください。<br />
+      画像サイズはスマホの場合、幅360px/高さ500pxかこの比率に合わせた画像推奨です。<br />
+      ※アップロードされた画像はご自身の端末内部でのみ処理され、外部へのアップロードはされません。お好きな画像をお試しください。<br />
     </p>
-    <label for="upload-image">ファイルを選択</label>
+    <label for="upload-image"
+      ><font-awesome-icon icon="fa-solid fa-upload" />画像を選択</label
+    >
     <input
       id="upload-image"
       type="file"
@@ -93,13 +142,17 @@ const uploadImage = (e: Event) => {
       @change="uploadImage"
     />
   </section>
+
+  <section class="capture-display">
+    <canvas :id="snapshotCanvasIdName" />
+  </section>
 </template>
 
 <style lang="sass" scoped>
 $art-area-width: 360px
 $art-area-height: 500px
 
-.wrapper
+.watermark-art-wrapper
   position: relative
   width: 100%
   .capture-video
@@ -115,6 +168,20 @@ $art-area-height: 500px
     height: $art-area-height
     transform: translateX(-50%) translateY(-50%)
     object-fit: contain
+
+.capture-control
+  margin: 0
+  button
+    width: 100%
+    padding: .5em
+    font-size: 1em
+    background-color: transparent
+    border: 1px solid white
+    appearance: none
+    svg
+      margin-right: .2em
+.capture-display
+  display: none
 
 .select-image
   select
@@ -141,6 +208,8 @@ $art-area-height: 500px
     text-align: center
     border: 1px solid white
     box-sizing: border-box
+    svg
+      margin-right: .2em
   input
     display: none
 </style>
