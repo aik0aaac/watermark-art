@@ -18,6 +18,9 @@ const state = reactive<State>({
 });
 const { image, error } = toRefs(state);
 
+const artFrameWidth = 360;
+const artFrameHeight = 500;
+
 const videoIdName = "captureVideo";
 onMounted(() => {
   // Videoタグ経由でカメラへアクセス
@@ -59,18 +62,10 @@ const generateSnapshot = () => {
 
   const video = document.getElementById(videoIdName) as HTMLVideoElement;
   const imageEle = document.getElementById(imgIdName) as HTMLImageElement;
-  const videoWidth = video.offsetWidth;
-  const videoHeight = video.offsetLeft;
-  canvas.setAttribute("width", videoWidth.toString());
-  canvas.setAttribute("height", videoHeight.toString());
-  ctx.drawImage(video, 0, 0, videoWidth, videoHeight);
-  ctx.drawImage(
-    imageEle,
-    0,
-    (videoHeight / 2) * -1,
-    imageEle.offsetWidth,
-    imageEle.offsetHeight
-  );
+  canvas.setAttribute("width", artFrameWidth.toString());
+  canvas.setAttribute("height", artFrameHeight.toString());
+  ctx.drawImage(video, 0, 0, artFrameWidth, artFrameHeight);
+  ctx.drawImage(imageEle, 0, 0, artFrameWidth, artFrameHeight);
   canvas.toBlob((blob) => {
     if (!blob) return;
     // 画像を生成
@@ -97,11 +92,19 @@ const generateSnapshot = () => {
     <video
       :id="videoIdName"
       class="capture-video"
+      :width="artFrameWidth"
+      :height="artFrameHeight"
       autoplay
       muted
       playsinline
     ></video>
-    <img :id="imgIdName" class="cover-watermark-art" :src="image" />
+    <img
+      :id="imgIdName"
+      :width="artFrameWidth"
+      :height="artFrameHeight"
+      class="cover-watermark-art"
+      :src="image"
+    />
   </section>
 
   <!-- 透かし絵選択 -->
@@ -149,23 +152,16 @@ const generateSnapshot = () => {
 </template>
 
 <style lang="sass" scoped>
-$art-area-width: 360px
-$art-area-height: 500px
-
 .watermark-art-wrapper
   position: relative
   width: 100%
   .capture-video
     display: block
     margin: 0 auto
-    width: $art-area-width
-    height: $art-area-height
   .cover-watermark-art
     position: absolute
     top: 50%
     left: 50%
-    width: $art-area-width
-    height: $art-area-height
     transform: translateX(-50%) translateY(-50%)
     object-fit: contain
 
